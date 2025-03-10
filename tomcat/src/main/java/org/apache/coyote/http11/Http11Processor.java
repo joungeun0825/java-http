@@ -5,7 +5,9 @@ import org.apache.coyote.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class Http11Processor implements Runnable, Processor {
@@ -26,18 +28,11 @@ public class Http11Processor implements Runnable, Processor {
 
     @Override
     public void process(final Socket connection) {
-        try (final var inputStream = connection.getInputStream();
+        try (final var inputStream = new InputStreamReader(connection.getInputStream());
+             final var bufferedReader = new BufferedReader(inputStream);
              final var outputStream = connection.getOutputStream()) {
 
-            final var responseBody = "Hello world!";
-
-            final var response = String.join("\r\n",
-                    "HTTP/1.1 200 OK ",
-                    "Content-Type: text/html;charset=utf-8 ",
-                    "Content-Length: " + responseBody.getBytes().length + " ",
-                    "",
-                    responseBody);
-
+            final String response = Router.route(bufferedReader);
             outputStream.write(response.getBytes());
             outputStream.flush();
         } catch (IOException | UncheckedServletException e) {
