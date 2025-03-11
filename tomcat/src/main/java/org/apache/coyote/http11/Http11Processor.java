@@ -28,42 +28,15 @@ public class Http11Processor implements Runnable, Processor {
 
     @Override
     public void process(final Socket connection) {
-        try (final var inputStream = connection.getInputStream();
-             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+        try (final var inputStream = new InputStreamReader(connection.getInputStream());
+             final var bufferedReader = new BufferedReader(inputStream);
              final var outputStream = connection.getOutputStream()) {
 
-            String[] header = br.readLine().split(" ");
-            String method = header[0];
-            String path = header[1].split(" ")[0];
-
-            String response = generateResponseBody(method, path);
-
-
+            final String response = Router.route(bufferedReader);
             outputStream.write(response.getBytes());
             outputStream.flush();
         } catch (IOException | UncheckedServletException e) {
             log.error(e.getMessage(), e);
         }
-    }
-
-    private String generateResponseBody(String method, String path){
-        if(method.equals("GET") && path.equals("/")){
-            final var responseBody = "Hello world!";
-
-            final var response = String.join("\r\n",
-                    "HTTP/1.1 200 OK ",
-                    "Content-Type: text/html;charset=utf-8 ",
-                    "Content-Length: " + responseBody.getBytes().length + " ",
-                    "",
-                    responseBody);
-
-            return response;
-        }
-
-        if(method.equals("GET") && path.equals("/index.html")){
-
-        }
-
-        return "";
     }
 }
