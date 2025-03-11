@@ -2,6 +2,7 @@ package org.apache.coyote.http11;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.Arrays;
 
@@ -35,12 +36,12 @@ public enum FilePath {
             return "Hello world!";
         }
 
-        final File file = new File(getClass().getClassLoader().getResource("static" + path).getPath());
+        final File file = new File(URLDecoder.decode(getClass().getClassLoader().getResource("static" + path).getPath(), "UTF-8"));
         final ContentType contentType = findContentType(this.path);
         String fileContents = new String(Files.readAllBytes(file.toPath()));
         final var response = String.join("\r\n",
                 "HTTP/1.1 200 OK ",
-                "Content-Type: " + contentType +";charset=utf-8 ",
+                "Content-Type: " + contentType.getValue() +";charset=utf-8 ",
                 "Content-Length: " + fileContents.getBytes().length + " ",
                 "",
                 fileContents);

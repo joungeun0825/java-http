@@ -38,7 +38,7 @@ public enum ServerPath {
         return handler.action();
     }
 
-    public String execute(Map<String, String> queryString) throws IOException {
-        return handler.action(queryString);
+    public String execute(Map<String, String> parameters) throws IOException {
+        return handler.action(parameters);
     }
 }

@@ -2,12 +2,11 @@ package org.apache.coyote.http11;
 
 import com.techcourse.exception.UncheckedServletException;
 import org.apache.coyote.Processor;
+import org.apache.catalina.connector.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 
 public class Http11Processor implements Runnable, Processor {
@@ -28,11 +27,19 @@ public class Http11Processor implements Runnable, Processor {
 
     @Override
     public void process(final Socket connection) {
-        try (final var inputStream = new InputStreamReader(connection.getInputStream());
-             final var bufferedReader = new BufferedReader(inputStream);
-             final var outputStream = connection.getOutputStream()) {
+        try (InputStream inputStream = connection.getInputStream();
+             OutputStream outputStream = connection.getOutputStream()) {
 
-            final String response = Router.route(bufferedReader);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder requestBuilder = new StringBuilder();
+            String line;
+
+            while (!(line = bufferedReader.readLine()).isEmpty()) {
+                requestBuilder.append(line).append("\r\n");
+            }
+
+            HttpRequest httpRequest = new HttpRequest(requestBuilder.toString());
+            final String response = Router.route(httpRequest);
             outputStream.write(response.getBytes());
             outputStream.flush();
         } catch (IOException | UncheckedServletException e) {
